@@ -9,7 +9,7 @@ CREATE TABLE Customer
   CustState     CHAR(2)      CONSTRAINT CustStateNotNull    NOT NULL,
   CustZip       CHAR(5)      CONSTRAINT CustZipNotNull      NOT NULL,
 
-  CONSTRAINT PKCustomer PRIMARY KEY (CustNo)
+  CONSTRAINT PK_CUSTOMER PRIMARY KEY (CustNo)
 
  );
  
@@ -18,19 +18,19 @@ CREATE TABLE Facility
 ( FacNo       CHAR(5)      CONSTRAINT FacNoNotNull    NOT NULL,
   FacName     VARCHAR(20)  CONSTRAINT FacNameNotNull  NOT NULL,
 
-  CONSTRAINT PKFacility PRIMARY KEY (FacNo),
-  CONSTRAINT UniqueFacName UNIQUE (FacName)
+  CONSTRAINT PK_FACILITY PRIMARY KEY (FacNo),
+  CONSTRAINT UNIQUE_FACNAME UNIQUE (FacName)
 
  );
 
 
 CREATE TABLE Location
-( LocNo      CHAR(5),
-  FacNo      CHAR(5),
+( LocNo      CHAR(5)       CONSTRAINT LocNoNotNull NOT NULL,
+  FacNo      CHAR(5)       CONSTRAINT FacNoFkNotNull NOT NULL,
   LocName    VARCHAR(20)   CONSTRAINT LocNameNotNull NOT NULL,
 
-  CONSTRAINT PKLocation PRIMARY KEY (LocNo),
-  CONSTRAINT FKFacNo FOREIGN KEY (FacNo) REFERENCES Facility
+  CONSTRAINT PK_LOCATION PRIMARY KEY (LocNo),
+  CONSTRAINT FK_FACNO FOREIGN KEY (FacNo) REFERENCES Facility (FacNo)
 
  );
 

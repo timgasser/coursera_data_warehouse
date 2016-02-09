@@ -2,7 +2,7 @@ CREATE TABLE Customer
 ( CustNo        CHAR(4)      CONSTRAINT CustNoNotNull       NOT NULL,
   CustName      VARCHAR(20)  CONSTRAINT CustNameNotNull     NOT NULL,
   CustAddress   VARCHAR(50)  CONSTRAINT CustAddressNotNull  NOT NULL,
-  CustInternal  BOOLEAN      CONSTRAINT CustContactNotNull  NOT NULL,
+  CustInternal  INTEGER      CONSTRAINT CustInternalNotNull NOT NULL,
   CustContact   VARCHAR(30)  CONSTRAINT CustContactNotNull  NOT NULL,
   CustPhone     CHAR(10)     CONSTRAINT CustPhoneNotNull    NOT NULL,
   CustCity      CHAR(20)     CONSTRAINT CustCityNotNul      NOT NULL,
@@ -11,15 +11,17 @@ CREATE TABLE Customer
 
   CONSTRAINT PKCustomer PRIMARY KEY (CustNo)
 
- )
+ );
  
 
 CREATE TABLE Facility
 ( FacNo       CHAR(5)      CONSTRAINT FacNoNotNull    NOT NULL,
   FacName     VARCHAR(20)  CONSTRAINT FacNameNotNull  NOT NULL,
 
-  CONSTRAINT PKFacility PRIMARY KEY (FacNo)
- )
+  CONSTRAINT PKFacility PRIMARY KEY (FacNo),
+  CONSTRAINT UniqueFacName UNIQUE (FacName)
+
+ );
 
 
 CREATE TABLE Location
@@ -27,8 +29,8 @@ CREATE TABLE Location
   FacNo      CHAR(5),
   LocName    VARCHAR(20)   CONSTRAINT LocNameNotNull NOT NULL,
 
-  CONSTRAINT PKLocation PRIMARY KEY (LocNo)
+  CONSTRAINT PKLocation PRIMARY KEY (LocNo),
   CONSTRAINT FKFacNo FOREIGN KEY (FacNo) REFERENCES Facility
 
- )
+ );
 

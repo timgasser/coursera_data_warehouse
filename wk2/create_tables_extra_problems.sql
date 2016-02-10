@@ -3,7 +3,7 @@
 --     Null values not allowed in the customer column though (accounting).
 
 CREATE TABLE Customer
-( CustNo          CHAR(8)      CONSTRAINT CustNoNotNull         NOT NULL,
+( CustNo          CHAR(8)      ,
   CustFirstName   VARCHAR(20)  CONSTRAINT CustFirstNameNotNull  NOT NULL,
   CustLastName    VARCHAR(20)  CONSTRAINT CustLastNameNotNull   NOT NULL,
   CustCity        VARCHAR(20)  ,
@@ -31,7 +31,7 @@ CREATE TABLE Employee
 CREATE TABLE OrderTbl
 ( OrdNo          CHAR(8)     ,
   OrdDate        DATE         CONSTRAINT OrdDateNotNull  NOT NULL,
-  CustNo         CHAR(8)     ,
+  CustNo         CHAR(8)      CONSTRAINT CustNoNotNull   NOT NULL,
   EmpNo          CHAR(8)     ,
 
   CONSTRAINT PK_ORDER_TBL PRIMARY KEY (OrdNo),

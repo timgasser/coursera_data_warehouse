@@ -16,7 +16,6 @@ CREATE TABLE Customer
 
  );
  
-
 CREATE TABLE Employee
 ( EmpNo           VARCHAR2(8)  ,
   EmpName         VARCHAR2(30) ,
@@ -32,7 +31,7 @@ CREATE TABLE Facility
 ( FacNo           VARCHAR2(8)  ,
   FacName         VARCHAR2(30) ,
 
-  CONSTRAINT PK_EMPLOYEE PRIMARY KEY (EmpNo)
+  CONSTRAINT PK_FACILITY PRIMARY KEY (FacNo)
 
  );
  
@@ -41,8 +40,8 @@ CREATE TABLE Location
   FacNo           VARCHAR2(8)  ,
   LocName         VARCHAR2(30) ,
 
-  CONSTRAINT PK_EMPLOYEE PRIMARY KEY (LocNo)
-
+  CONSTRAINT PK_LOCATION PRIMARY KEY (LocNo),
+  CONSTRAINT FK_LOCATION_FACILITY FOREIGN KEY (FacNo) REFERENCES Facility (FacNo)
  );
  
 CREATE TABLE ResourceTbl
@@ -64,9 +63,11 @@ CREATE TABLE EventRequest
   Status          CHAR(10)     , -- {Approved, Pending, Denied}
   EstCost         DECIMAL(5,2) , -- Max $99999.99
   EstAudience     DECIMAL(5)   , -- Max 99999 people
-  BudNo           VARCHAR2(8)  
+  BudNo           VARCHAR2(8)  ,
 
-  CONSTRAINT PK_EVENT_REQUEST PRIMARY KEY (EventNo)
+  CONSTRAINT PK_EVENT_REQUEST  PRIMARY KEY (EventNo),
+  CONSTRAINT FK_EVENT_REQUEST_CUSTOMER       FOREIGN KEY (CustNo) REFERENCES Customer (CustNo),
+  CONSTRAINT FK_EVENT_REQUEST_FACILITY       FOREIGN KEY (FacNo) REFERENCES Facility (FacNo)
 
  );
 
@@ -78,7 +79,9 @@ CREATE TABLE EventPlan
   Activity        CHAR(10)     , 
   EmpNo           VARCHAR2(8)  ,
 
-  CONSTRAINT PK_EVENT_PLAN PRIMARY KEY (PlanNo)
+  CONSTRAINT PK_EVENT_PLAN     PRIMARY KEY (PlanNo),
+  CONSTRAINT FK_EVENT_PLAN_EVENT_REQUEST  FOREIGN KEY (EventNo) REFERENCES EventRequest (EventNo),
+  CONSTRAINT FK_EVENT_PLAN_EMPLOYEE       FOREIGN KEY (EmpNo) REFERENCES Employee (EmpNo)
 
  );
 
@@ -89,9 +92,14 @@ CREATE TABLE EventPlanLine
   TimeEnd         DATE         ,
   NumberFld       DECIMAL(2)   , -- Max 99 fields
   LocNo           VARCHAR2(8)  ,
-  ResNo           VARCHAR2(8)
+  ResNo           VARCHAR2(8)  ,
 
-  CONSTRAINT PK_EVENT_PLAN_LINE PRIMARY KEY (PlanNo)
+-- Had to abbreviate the EVENT_PLAN_LINE to EPL or the contraints were too long below 
+
+  CONSTRAINT PK_EVENT_PLAN_LINE PRIMARY KEY (PlanNo, LineNo),
+  CONSTRAINT FK_EPL_EVENT_PLAN      FOREIGN KEY (PlanNo) REFERENCES EventPlan (PlanNo),
+  CONSTRAINT FK_EPL_LOCATION        FOREIGN KEY (LocNo) REFERENCES Location (LocNo),
+  CONSTRAINT FK_EPL_RESOURCE_TBL    FOREIGN KEY (ResNo) REFERENCES ResourceTbl (ResNo)
 
 
  );

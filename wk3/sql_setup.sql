@@ -1,0 +1,199 @@
+-- Tim Gasser submission for Module 3 Assignment
+-- All statements below are in Oracle format
+
+CREATE TABLE Customer
+( CustNo          VARCHAR2(8)  CONSTRAINT CustCustNoRequired   NOT NULL ,
+  CustName        VARCHAR2(30) CONSTRAINT CustCustNameRequired NOT NULL ,
+  Address         VARCHAR2(30) CONSTRAINT CustAddressRequired  NOT NULL ,
+  Internal        CHAR(1)      CONSTRAINT CustInternalRequired NOT NULL ,
+  Contact         VARCHAR2(30) CONSTRAINT CustContactRequired  NOT NULL ,
+  Phone           CHAR(15)     CONSTRAINT CustPhoneRequired    NOT NULL , -- (123) 456-7890
+  City            VARCHAR2(20) CONSTRAINT CustCityRequired     NOT NULL , 
+  State           CHAR(2)      CONSTRAINT CustStateRequired    NOT NULL ,
+  Zip             CHAR(10)     CONSTRAINT CustZipRequired      NOT NULL , -- Could be long format ZIP (12345-6789)
+
+  CONSTRAINT PK_CUSTOMER PRIMARY KEY (CustNo)
+
+ );
+ 
+CREATE TABLE Employee
+( EmpNo          VARCHAR2(8)  CONSTRAINT EmpEmpNoRequired        NOT NULL,
+  EmpName        VARCHAR2(30) CONSTRAINT EmpEmpNameRequired      NOT NULL,
+  Department     VARCHAR2(30) CONSTRAINT EmpDepartmentRequired   NOT NULL,
+  Email          VARCHAR2(30) CONSTRAINT EmpEmailRequired        NOT NULL,
+  Phone          CHAR(15)     CONSTRAINT EmpPhoneRequired        NOT NULL, -- Internal only? Allow enough for cellphone
+
+  CONSTRAINT PK_EMPLOYEE PRIMARY KEY (EmpNo)
+
+ );
+ 
+CREATE TABLE Facility
+( FacNo           VARCHAR2(8)  ,
+  FacName         VARCHAR2(30) ,
+
+  CONSTRAINT PK_FACILITY PRIMARY KEY (FacNo)
+
+ );
+ 
+CREATE TABLE Location
+( LocNo           VARCHAR2(8)  CONSTRAINT LocLocNoRequired        NOT NULL,
+  FacNo           VARCHAR2(8)  CONSTRAINT LocFacNoRequired        NOT NULL,
+  LocName         VARCHAR2(30) CONSTRAINT LocLocNameRequired      NOT NULL,
+
+  CONSTRAINT PK_LOCATION PRIMARY KEY (LocNo),
+
+  CONSTRAINT FK_LOCATION_FACILITY FOREIGN KEY (FacNo) REFERENCES Facility (FacNo)
+ );
+ 
+CREATE TABLE ResourceTbl
+( ResNo           VARCHAR2(8)  CONSTRAINT ResResNoRequired        NOT NULL,
+  ResName         VARCHAR2(30) CONSTRAINT ResResNameRequired      NOT NULL,
+  Rate            DECIMAL(5,2) CONSTRAINT ResRateRequired         NOT NULL,
+
+  CONSTRAINT PK_RESOURCE_TBL PRIMARY KEY (ResNo),
+
+  CONSTRAINT RESOURCE_RATE_POS CHECK (Rate > 0)
+ );
+
+CREATE TABLE EventRequest
+( EventNo         VARCHAR2(8)  CONSTRAINT ErqEventNoRequired        NOT NULL,
+  DateHeld        DATE         CONSTRAINT ErqDateHeldRequired       NOT NULL,
+  DateReq         DATE         CONSTRAINT ErqDateReqRequired        NOT NULL,
+  FacNo           VARCHAR(8)   CONSTRAINT ErqFacNoRequired          NOT NULL,
+  CustNo          VARCHAR(8)   CONSTRAINT ErqCustNoRequired         NOT NULL,
+  DateAuth        DATE        ,
+  Status          CHAR(10)     CONSTRAINT ErqStatusRequired         NOT NULL, -- {Approved, Pending, Denied}
+  EstCost         DECIMAL(10,2) CONSTRAINT ErqEstCostRequired        NOT NULL, -- Max $99999.99
+  EstAudience     DECIMAL(10)   CONSTRAINT ErqEstAudienceRequired    NOT NULL, -- Max 99999 people
+  BudNo           VARCHAR2(8) ,
+
+  CONSTRAINT PK_EVENT_REQUEST  PRIMARY KEY (EventNo),
+
+  CONSTRAINT FK_EVENT_REQUEST_CUSTOMER       FOREIGN KEY (CustNo) REFERENCES Customer (CustNo),
+  CONSTRAINT FK_EVENT_REQUEST_FACILITY       FOREIGN KEY (FacNo) REFERENCES Facility (FacNo),
+
+  CONSTRAINT EVENT_REQUEST_STATUS CHECK (Status IN ('Approved', 'Pending', 'Denied')),
+  CONSTRAINT EVENT_REQUEST_AUDIENCE_POS CHECK (EstAudience > 0)
+
+ );
+
+CREATE TABLE EventPlan
+( PlanNo          VARCHAR2(8)  CONSTRAINT EpPlanNoRequired      NOT NULL,
+  EventNo         VARCHAR2(8)  CONSTRAINT EpEventNoRequired     NOT NULL,
+  WorkDate        DATE         CONSTRAINT EpWorkDateRequired    NOT NULL,
+  Notes           VARCHAR2(40) , -- {Operation, Cleanup, Setup}
+  Activity        CHAR(10)     CONSTRAINT EpActivityRequired    NOT NULL, 
+  EmpNo           VARCHAR2(8)  ,
+
+  CONSTRAINT PK_EVENT_PLAN     PRIMARY KEY (PlanNo),
+
+  CONSTRAINT FK_EVENT_PLAN_EVENT_REQUEST  FOREIGN KEY (EventNo) REFERENCES EventRequest (EventNo),
+  CONSTRAINT FK_EVENT_PLAN_EMPLOYEE       FOREIGN KEY (EmpNo) REFERENCES Employee (EmpNo)
+
+ );
+
+CREATE TABLE EventPlanLine
+( PlanNo          VARCHAR2(8)  CONSTRAINT EplPlanNoRequired      NOT NULL,
+  LineNo          DECIMAL(5)   CONSTRAINT EplLineNoRequired      NOT NULL, -- Max 99 lines
+  TimeStart       DATE         CONSTRAINT EplTimeStartRequired   NOT NULL,
+  TimeEnd         DATE         CONSTRAINT EplTimeEndRequired     NOT NULL,
+  NumberFld       DECIMAL(5)   CONSTRAINT EplNumberFldRequired   NOT NULL, -- Max 99 fields
+  LocNo           VARCHAR2(8)  CONSTRAINT EplLocNoRequired       NOT NULL,
+  ResNo           VARCHAR2(8)  CONSTRAINT EplResNoRequired       NOT NULL,
+
+-- Had to abbreviate the EVENT_PLAN_LINE to EPL or the contraints were too long below 
+
+  CONSTRAINT PK_EVENT_PLAN_LINE PRIMARY KEY (PlanNo, LineNo),
+
+  CONSTRAINT FK_EPL_EVENT_PLAN      FOREIGN KEY (PlanNo) REFERENCES EventPlan (PlanNo),
+  CONSTRAINT FK_EPL_LOCATION        FOREIGN KEY (LocNo)  REFERENCES Location (LocNo),
+  CONSTRAINT FK_EPL_RESOURCE_TBL    FOREIGN KEY (ResNo)  REFERENCES ResourceTbl (ResNo),
+
+  CONSTRAINT EPL_START_LT_END CHECK (TimeStart < TimeEnd)
+
+
+ );
+
+
+Insert into EMPLOYEE (EMPNO,EMPNAME,DEPARTMENT,EMAIL,PHONE) values ('E100','Chuck Coordinator','Administration','chuck@colorado.edu','3-1111');
+Insert into EMPLOYEE (EMPNO,EMPNAME,DEPARTMENT,EMAIL,PHONE) values ('E101','Mary Manager','Football','mary@colorado.edu','5-1111');
+Insert into EMPLOYEE (EMPNO,EMPNAME,DEPARTMENT,EMAIL,PHONE) values ('E102','Sally Supervisor','Planning','sally@colorado.edu','3-2222');
+Insert into EMPLOYEE (EMPNO,EMPNAME,DEPARTMENT,EMAIL,PHONE) values ('E103','Alan Administrator','Administration','alan@colorado.edu','3-3333');
+
+Insert into CUSTOMER (CUSTNO,CUSTNAME,ADDRESS,INTERNAL,CONTACT,PHONE,CITY,STATE,ZIP) values ('C100','Football','Box 352200','Y','Mary Manager','6857100','Boulder','CO','80309');
+Insert into CUSTOMER (CUSTNO,CUSTNAME,ADDRESS,INTERNAL,CONTACT,PHONE,CITY,STATE,ZIP) values ('C101','Men''s Basketball','Box 352400','Y','Sally Supervisor','5431700','Boulder','CO','80309');
+Insert into CUSTOMER (CUSTNO,CUSTNAME,ADDRESS,INTERNAL,CONTACT,PHONE,CITY,STATE,ZIP) values ('C103','Baseball','Box 352020','Y','Bill Baseball','5431234','Boulder','CO','80309');
+Insert into CUSTOMER (CUSTNO,CUSTNAME,ADDRESS,INTERNAL,CONTACT,PHONE,CITY,STATE,ZIP) values ('C104','Women''s Softball','Box 351200','Y','Sue Softball','5434321','Boulder','CO','80309');
+Insert into CUSTOMER (CUSTNO,CUSTNAME,ADDRESS,INTERNAL,CONTACT,PHONE,CITY,STATE,ZIP) values ('C105','High School Football','123 AnyStreet','N','Coach Bob','4441234','Louisville','CO','80027');
+
+Insert into RESOURCETBL (RESNO,RESNAME,RATE) values ('R100','attendant',10);
+Insert into RESOURCETBL (RESNO,RESNAME,RATE) values ('R101','police',15);
+Insert into RESOURCETBL (RESNO,RESNAME,RATE) values ('R102','usher',10);
+Insert into RESOURCETBL (RESNO,RESNAME,RATE) values ('R103','nurse',20);
+Insert into RESOURCETBL (RESNO,RESNAME,RATE) values ('R104','janitor',15);
+Insert into RESOURCETBL (RESNO,RESNAME,RATE) values ('R105','food service',10);
+
+Insert into FACILITY (FACNO,FACNAME) values ('F100','Football stadium');
+Insert into FACILITY (FACNO,FACNAME) values ('F101','Basketball arena');
+Insert into FACILITY (FACNO,FACNAME) values ('F102','Baseball field');
+Insert into FACILITY (FACNO,FACNAME) values ('F103','Recreation room');
+
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L100','F100','Locker room');
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L101','F100','Plaza');
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L102','F100','Vehicle gate');
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L103','F101','Locker room');
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L104','F100','Ticket Booth');
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L105','F101','Gate');
+Insert into LOCATION (LOCNO,FACNO,LOCNAME) values ('L106','F100','Pedestrian gate');
+
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E100',to_date('25-OCT-13','DD-MON-RR'),to_date('06-JUN-13','DD-MON-RR'),'C100','F100',to_date('08-JUN-13','DD-MON-RR'),'Approved',5000,80000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E101',to_date('26-OCT-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C100','F100',null,'Pending',5000,80000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E103',to_date('21-SEP-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C100','F100',to_date('01-AUG-13','DD-MON-RR'),'Approved',5000,80000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E102',to_date('14-SEP-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C100','F100',to_date('31-JUL-13','DD-MON-RR'),'Approved',5000,80000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E104',to_date('03-DEC-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C101','F101',to_date('31-JUL-13','DD-MON-RR'),'Approved',2000,12000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E105',to_date('05-DEC-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C101','F101',to_date('01-AUG-13','DD-MON-RR'),'Approved',2000,10000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E106',to_date('12-DEC-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C101','F101',to_date('31-JUL-13','DD-MON-RR'),'Approved',2000,10000,'B1000');
+Insert into EVENTREQUEST (EVENTNO,DATEHELD,DATEREQ,CUSTNO,FACNO,DATEAUTH,STATUS,ESTCOST,ESTAUDIENCE,BUDNO) values ('E107',to_date('23-NOV-13','DD-MON-RR'),to_date('28-JUL-13','DD-MON-RR'),'C105','F100',to_date('31-JUL-13','DD-MON-RR'),'Denied',10000,5000,null);
+
+
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P100','E100',to_date('25-OCT-13','DD-MON-RR'),'Standard operation','Operation','E102');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P101','E104',to_date('03-DEC-13','DD-MON-RR'),'Watch for gate crashers','Operation','E100');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P102','E105',to_date('05-DEC-13','DD-MON-RR'),'Standard operation','Operation','E102');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P103','E106',to_date('12-DEC-13','DD-MON-RR'),'Watch for seat switching','Operation',null);
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P104','E101',to_date('26-OCT-13','DD-MON-RR'),'Standard cleanup','Cleanup','E101');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P105','E100',to_date('25-OCT-13','DD-MON-RR'),'Light cleanup','Cleanup','E101');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P199','E102',to_date('10-DEC-13','DD-MON-RR'),'ABC','Operation','E101');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P299','E101',to_date('26-OCT-13','DD-MON-RR'),null,'Operation','E101');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P349','E106',to_date('12-DEC-13','DD-MON-RR'),null,'Setup','E101');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P85','E100',to_date('25-OCT-13','DD-MON-RR'),'Standard operation','Cleanup','E102');
+Insert into EVENTPLAN (PLANNO,EVENTNO,WORKDATE,NOTES,ACTIVITY,EMPNO) values ('P95','E101',to_date('26-OCT-13','DD-MON-RR'),'Extra security','Cleanup','E102');
+
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P100',1, to_date('25-OCT-13 8:00:00','DD-MON-RR HH24:MI:SS'), to_date('25-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),2,'L100','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P100',2, to_date('25-OCT-13 12:00:00','DD-MON-RR HH24:MI:SS'),to_date('25-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'), 2,'L101','R101');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P100',3, to_date('25-OCT-13 7:00:00','DD-MON-RR HH24:MI:SS'), to_date('25-OCT-13 16:30:00','DD-MON-RR HH24:MI:SS'), 1,'L102','R102');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P100',4, to_date('25-OCT-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('25-OCT-13 22:00:00','DD-MON-RR HH24:MI:SS'),2,'L100','R102');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P101',1, to_date('3-DEC-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('3-DEC-13 20:00:00','DD-MON-RR HH24:MI:SS'),2,'L103','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P101',2, to_date('3-DEC-13 18:30:00','DD-MON-RR HH24:MI:SS'),to_date('3-DEC-13 19:00:00','DD-MON-RR HH24:MI:SS'),4,'L105','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P101',3, to_date('3-DEC-13 19:00:00','DD-MON-RR HH24:MI:SS'),to_date('3-DEC-13 20:00:00','DD-MON-RR HH24:MI:SS'),2,'L103','R103');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P102',1, to_date('5-DEC-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('5-DEC-13 19:00:00','DD-MON-RR HH24:MI:SS'),2,'L103','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P102',2, to_date('5-DEC-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('5-DEC-13 21:00:00','DD-MON-RR HH24:MI:SS'),4,'L105','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P102',3, to_date('5-DEC-13 19:00:00','DD-MON-RR HH24:MI:SS'),to_date('5-DEC-13 22:00:00','DD-MON-RR HH24:MI:SS'),2,'L103','R103');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P103',1, to_date('12-DEC-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('12-DEC-13 21:00:00','DD-MON-RR HH24:MI:SS'),2,'L103','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P103',2, to_date('12-DEC-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('12-DEC-13 21:00:00','DD-MON-RR HH24:MI:SS'),4,'L105','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P103',3, to_date('12-DEC-13 19:00:00','DD-MON-RR HH24:MI:SS'),to_date('12-DEC-13 22:00:00','DD-MON-RR HH24:MI:SS'),2,'L103','R103');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P104',1, to_date('26-OCT-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('26-OCT-13 22:00:00','DD-MON-RR HH24:MI:SS'),4,'L101','R104');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P104',2, to_date('26-OCT-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('26-OCT-13 22:00:00','DD-MON-RR HH24:MI:SS'),4,'L100','R104');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P105',1, to_date('25-OCT-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('25-OCT-13 22:00:00','DD-MON-RR HH24:MI:SS'),4,'L101','R104');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P105',2, to_date('25-OCT-13 18:00:00','DD-MON-RR HH24:MI:SS'),to_date('25-OCT-13 22:00:00','DD-MON-RR HH24:MI:SS'),4,'L100','R104');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P199',1, to_date('10-DEC-13 8:00:00','DD-MON-RR HH24:MI:SS'), to_date('10-DEC-13 12:00:00','DD-MON-RR HH24:MI:SS'),1,'L100','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P349',1, to_date('12-DEC-13 12:00:00','DD-MON-RR HH24:MI:SS'),to_date('12-DEC-13 15:30:00','DD-MON-RR HH24:MI:SS'),1,'L103','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P85',1,  to_date('25-OCT-13 9:00:00','DD-MON-RR HH24:MI:SS'), to_date('25-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),5,'L100','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P85',2,  to_date('25-OCT-13 8:00:00','DD-MON-RR HH24:MI:SS'), to_date('25-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),2,'L102','R101');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P85',3, to_date('25-OCT-13 10:00:00','DD-MON-RR HH24:MI:SS'), to_date('25-OCT-13 15:00:00','DD-MON-RR HH24:MI:SS'),3,'L104','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P95',1, to_date('26-OCT-13 8:00:00','DD-MON-RR HH24:MI:SS'),  to_date('26-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),4,'L100','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P95',2, to_date('26-OCT-13 9:00:00','DD-MON-RR HH24:MI:SS'),  to_date('26-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),4,'L102','R101');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P95',3, to_date('26-OCT-13 10:00:00','DD-MON-RR HH24:MI:SS'), to_date('26-OCT-13 15:00:00','DD-MON-RR HH24:MI:SS'),4,'L106','R100');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P95',4, to_date('26-OCT-13 13:00:00','DD-MON-RR HH24:MI:SS'), to_date('26-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),2,'L100','R103');
+Insert into EVENTPLANLINE (PLANNO,LINENO,TIMESTART,TIMEEND,NUMBERFLD,LOCNO,RESNO) values ('P95',5, to_date('26-OCT-13 13:00:00','DD-MON-RR HH24:MI:SS'), to_date('26-OCT-13 17:00:00','DD-MON-RR HH24:MI:SS'),2,'L101','R104');
+
+

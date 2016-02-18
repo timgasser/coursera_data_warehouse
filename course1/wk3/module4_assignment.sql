@@ -45,7 +45,7 @@ WHERE Facility.FacName = 'Basketball arena'
 -- has 4 lines and 7 resources assigned.  You only need to consider event plans 
 -- that have at least one line.
 
-SELECT EventPlan.PlanNo, COUNT(EventPlanLine.LineNo) AS EventPlanLines, COUNT(ResourceTbl.ResNo)
+SELECT EventPlan.PlanNo, COUNT(*) AS EventPlanLines, SUM(NumberFld)
 FROM EventPlan INNER JOIN EventPlanLine
     ON EventPlan.PlanNo = EventPlanLine.PlanNo
     INNER JOIN ResourceTbl 

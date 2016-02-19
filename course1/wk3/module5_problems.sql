@@ -7,6 +7,7 @@ SELECT EventNo, DateHeld, EventRequest.CustNo, CustName, EventRequest.FacNo, Fac
 FROM Facility, EventRequest, Customer
 WHERE (EventRequest.CustNo = Customer.CustNo)
     AND (EventRequest.FacNo = Facility.FacNo)
+    AND City = ‘Boulder’
     AND EXTRACT(YEAR from DateReq) = '2013';
 
 -- Q2: List the customer number, customer name, event number, date held, 
@@ -18,7 +19,8 @@ SELECT EventRequest.CustNo, CustName, EventNo, DateHeld, EventRequest.FacNo,
 FROM Facility, EventRequest, Customer
 WHERE (EventRequest.CustNo = Customer.CustNo)
     AND (EventRequest.FacNo = Facility.FacNo)
-    AND EXTRACT(YEAR from DateHeld) = '2013';
+    AND EXTRACT(YEAR from DateHeld) = '2013'
+    AND (EstCost/ EstAudience) < 0.2;
 
 -- Q3: List the customer number, customer name, and total estimated costs for 
 -- Approved events. The total amount of events is the sum of the estimated cost 
@@ -46,7 +48,7 @@ SELECT *
 FROM ResourceTbl;
 
 UPDATE ResourceTbl
-SET Rate = 22
+SET Rate = Rate * 1.1
 WHERE (ResNo = 'R103')
     AND (ResName = 'nurse');
 
